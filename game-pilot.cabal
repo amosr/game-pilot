@@ -1,0 +1,43 @@
+Name:           game-pilot
+Version:        0.0.0.1
+Build-Type:     Simple
+Cabal-Version:  >=1.6
+Stability:      experimental
+
+Executable game-pilot
+  Build-Depends: 
+        base,
+        GLFW-b,
+        vect,
+        vect-opengl,
+        vector,
+        random,
+        OpenGL,
+        OpenGLRaw
+
+  Main-is: Main.hs
+  Other-modules:
+        RenderSky
+        RenderState
+        RenderTunnel
+        State
+        Tunnel
+
+  GHC-options:
+        -Wall
+        -fno-warn-orphans
+        -threaded
+        -O2
+
+  Extensions:
+        ExistentialQuantification
+        FlexibleContexts
+        FunctionalDependencies
+        KindSignatures
+        MultiParamTypeClasses
+        PatternGuards
+        RankNTypes
+        ScopedTypeVariables
+
+
+
