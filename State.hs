@@ -19,11 +19,11 @@ data State
  , _sOrg        :: IORef V.Vec3
  , _sRot        :: IORef Q.UnitQuaternion
  , _sCursorPos  :: IORef (Double, Double)
- , _sSpeed      :: IORef Double
+ , _sSegmentsPerSec :: Double
  }
 
-init :: GLFW.Window -> T.Tunnel -> IO State
-init win tun
+init :: GLFW.Window -> T.Tunnel -> Int -> IO State
+init win tun segsPerSecond
  = do   tun'    <- newIORef   tun
         frames' <- newIORef   0
         time'   <- newIORef   0
@@ -34,8 +34,6 @@ init win tun
         pos     <- GLFW.getCursorPos win
         pos'    <- newIORef   pos
 
-        speed'  <- newIORef   40
-
         return State
                { _sTunnel    = tun'
                , _sFrames    = frames'
@@ -44,7 +42,7 @@ init win tun
                , _sOrg       = org'
                , _sRot       = rot'
                , _sCursorPos = pos'
-               , _sSpeed     = speed'
+               , _sSegmentsPerSec = fromIntegral segsPerSecond
                }
 
 
@@ -74,8 +72,7 @@ update win s
 
         writeIORef (_sRot s) rot'
 
-        sspeed <- readIORef $ _sSpeed s
-        let speed = frametime * sspeed
+        let speed = frametime * _sSegmentsPerSec s
 
         -- Check if we can peel a segment off the tunnel
         tun <- readIORef $ _sTunnel s

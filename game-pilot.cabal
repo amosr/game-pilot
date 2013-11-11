@@ -13,10 +13,16 @@ Executable game-pilot
         vector,
         random,
         OpenGL,
-        OpenGLRaw
+        OpenGLRaw,
+
+        hsndfile,
+        hsndfile-vector,
+        OpenAL
 
   Main-is: Main.hs
   Other-modules:
+        AudioPlay
+        AudioLoad
         RenderSky
         RenderState
         RenderTunnel
