@@ -3,6 +3,7 @@ module Main where
 import qualified Graphics.UI.GLFW   as GLFW
 import Graphics.Rendering.OpenGL
 
+import qualified GenerateTunnel     as GT
 import qualified Tunnel             as T
 
 import qualified State              as S
@@ -16,8 +17,9 @@ import qualified AudioPlay          as APlay
 -- everything from here starts with gl or GL
 -- import Graphics.Rendering.OpenGL.Raw
 -- import Graphics.Rendering.GLU.Raw ( gluPerspective )
-import System.Exit ( exitWith, ExitCode(..) )
 import Control.Monad ( forever )
+import System.Environment ( getArgs )
+import System.Exit ( exitWith, ExitCode(..) )
 
 -- import Data.IORef
 
@@ -79,9 +81,11 @@ main :: IO ()
 main = do
      True <- GLFW.init
 
-     let segsPerSecond = 40
+     let segsPerSecond = 30
 
-     Just music <- ALoad.load "test.flac" segsPerSecond
+     [filename] <- getArgs
+
+     Just music <- ALoad.load filename segsPerSecond
      putStrLn (show $ ALoad._aDuration music)
      putStrLn (show $ ALoad._aInfo music)
 
@@ -93,7 +97,8 @@ main = do
      monitor  <- GLFW.getPrimaryMonitor
      Just win <- GLFW.createWindow 1024 768 "game-pilot" monitor Nothing
 
-     state    <- S.init win T.defaultTunnel segsPerSecond
+     let tun = GT.mkTunnel music
+     state    <- S.init win tun segsPerSecond
 
      GLFW.makeContextCurrent (Just win)
      -- register the function to do all our OpenGL drawing

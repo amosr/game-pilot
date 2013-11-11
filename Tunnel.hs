@@ -30,7 +30,7 @@ data Tunnel
 
 lodSegmentsOfTunnel :: Tunnel -> [(Int,Segment)]
 lodSegmentsOfTunnel tun
- = go 0 60 1 200 (_tSegments tun)
+ = go 0 100 1 200 (_tSegments tun)
  where
   go n till skip end segs
    | n >= end

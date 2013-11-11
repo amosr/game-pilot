@@ -75,19 +75,20 @@ update state
         datas <- readIORef $ _asData state
 
         let enqueue      = newproc' -- - oldproc
-            (now,rest)   = splitAt enqueue datas
-            (nowB,restB) = splitAt enqueue buffs
+            (now,rest)   = splitAt enqueue (datas `zip` buffs)
+            (nowD,nowB)  = unzip now
+            (restD,restB)= unzip rest
 
         putStrLn $ "enqueuing more: " ++ show enqueue
 
         AL.unqueueBuffers src nowB
 
-        mapM_ fillBuffer (nowB `zip` now)
+        mapM_ fillBuffer (nowB `zip` nowD)
 
         AL.queueBuffers src nowB
         -- AL.play [src]
 
-        writeIORef (_asData  state) rest
+        writeIORef (_asData  state) restD
         writeIORef (_asBuffs state) restB
 
 

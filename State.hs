@@ -72,7 +72,7 @@ update win s
 
         writeIORef (_sRot s) rot'
 
-        let speed = frametime * _sSegmentsPerSec s
+        let speed = frametime * _sSegmentsPerSec s * T.tunnelSegmentSize
 
         -- Check if we can peel a segment off the tunnel
         tun <- readIORef $ _sTunnel s

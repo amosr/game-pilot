@@ -21,8 +21,9 @@ Executable game-pilot
 
   Main-is: Main.hs
   Other-modules:
-        AudioPlay
         AudioLoad
+        AudioPlay
+        GenerateTunnel
         RenderSky
         RenderState
         RenderTunnel
@@ -34,6 +35,8 @@ Executable game-pilot
         -fno-warn-orphans
         -threaded
         -O2
+        -rtsopts
+        -eventlog
 
   Extensions:
         ExistentialQuantification
