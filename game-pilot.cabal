@@ -17,12 +17,15 @@ Executable game-pilot
 
         hsndfile,
         hsndfile-vector,
-        OpenAL
+        OpenAL,
+
+        storable-complex
 
   Main-is: Main.hs
   Other-modules:
         AudioLoad
         AudioPlay
+        FFT
         GenerateTunnel
         RenderSky
         RenderState

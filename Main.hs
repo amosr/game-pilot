@@ -83,7 +83,9 @@ main = do
 
      let segsPerSecond = 30
 
-     [filename] <- getArgs
+     args <- getArgs
+     let filename   = last args
+         fullscreen = length args == 2 && head args == "-f"
 
      Just music <- ALoad.load filename segsPerSecond
      putStrLn (show $ ALoad._aDuration music)
@@ -94,7 +96,9 @@ main = do
 
      GLFW.defaultWindowHints
      -- get a fullscreen window using the primary monitor
-     monitor  <- GLFW.getPrimaryMonitor
+     monitor  <- if   fullscreen
+                 then GLFW.getPrimaryMonitor
+                 else return Nothing
      Just win <- GLFW.createWindow 1024 768 "game-pilot" monitor Nothing
 
      let tun = GT.mkTunnel music
