@@ -1,10 +1,10 @@
 module Main where
+-- Glue everything together
 
 import qualified Graphics.UI.GLFW   as GLFW
 import Graphics.Rendering.OpenGL
 
 import qualified GenerateTunnel     as GT
-import qualified Tunnel             as T
 
 import qualified State              as S
 import qualified RenderState        as RS
@@ -12,16 +12,9 @@ import qualified RenderState        as RS
 import qualified AudioLoad          as ALoad
 import qualified AudioPlay          as APlay
 
--- import qualified Render as R
-
--- everything from here starts with gl or GL
--- import Graphics.Rendering.OpenGL.Raw
--- import Graphics.Rendering.GLU.Raw ( gluPerspective )
 import Control.Monad ( forever )
 import System.Environment ( getArgs )
 import System.Exit ( exitWith, ExitCode(..) )
-
--- import Data.IORef
 
 
 initGL :: GLFW.Window -> IO ()
@@ -73,8 +66,6 @@ shutdown win = do
 
 keyPressed :: S.State -> GLFW.KeyCallback 
 keyPressed _ win GLFW.Key'Escape _ GLFW.KeyState'Pressed _ = shutdown win
--- keyPressed s win GLFW.Key'Up     _ GLFW.KeyState'Pressed _ = modifyIORef (S._sSpeed s) (     (+) 1)
--- keyPressed s win GLFW.Key'Down   _ GLFW.KeyState'Pressed _ = modifyIORef (S._sSpeed s) (flip (-) 1)
 keyPressed _ _   _               _ _                     _ = return ()
 
 main :: IO ()
@@ -91,7 +82,7 @@ main = do
      putStrLn (show $ ALoad._aDuration music)
      putStrLn (show $ ALoad._aInfo music)
 
-     audio <- APlay.init music
+     audio <- APlay.initialise music
 
 
      GLFW.defaultWindowHints
@@ -102,7 +93,7 @@ main = do
      Just win <- GLFW.createWindow 1024 768 "game-pilot" monitor Nothing
 
      let tun = GT.mkTunnel music
-     state    <- S.init win tun segsPerSecond
+     state    <- S.initialise win tun segsPerSecond
 
      GLFW.makeContextCurrent (Just win)
      -- register the function to do all our OpenGL drawing

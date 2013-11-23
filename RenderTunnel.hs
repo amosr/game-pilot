@@ -1,4 +1,5 @@
 module RenderTunnel where
+-- Draw segments of tunnel
 
 import qualified Data.Vector.Unboxed                as U
 import qualified Data.Vect.Double                   as V
@@ -37,7 +38,6 @@ draw tun
   draw_verts q dist width ((ad,ac),(bd,bc),(sine,cosine))
    = do color ac
         GL.vertex (V.Vec3 (sine*ad) (cosine*ad) 0)
-        -- putStrLn (show ad ++ ", " ++ show ac ++ " -> " ++ show bd ++ ", " ++ show bc ++ " :: " ++ show (sine, cosine))
 
         let bv  = V.Vec3 (sine*bd) (cosine*bd) (dist * width)
             bv' = Q.actU q bv

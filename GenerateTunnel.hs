@@ -1,4 +1,7 @@
-module GenerateTunnel where
+module GenerateTunnel
+    ( mkTunnel )
+    where
+-- Generate tunnel based on music
 
 import qualified Data.Vector.Storable             as SV
 import qualified Data.Vector.Unboxed              as U
@@ -10,20 +13,24 @@ import qualified AudioLoad                        as A
 
 import qualified FFT                              as FFT
 
-import Data.Int
+import Data.Int (Int16)
 
+-- Create tunnel based on audio
+-- Tunnel is a lazy list of segments, so audio will be loaded lazily as tunnel is forced
 mkTunnel :: A.Audio -> T.Tunnel
 mkTunnel audio
  = T.tunnel $ segs (0 :: Double) (A._aBuffs audio)
  where
+  -- Out of audio, so just make an empty segment
   segs i []
    =     T.Segment Q.unitU (dataFor i 0) (widthFor i) (bgFor i) : segs (i+1) []
+  -- Analyse the chunk and stuff
   segs i (s:ss)
-   = let (peak, maxFreq, v1, v2, v3, v4) = analyse s
+   = let (peak, _maxFreq, v1, v2, v3, v4) = analyse s
          n' = 1 / (((peak + v1) / 5) + 0.400)
      in  T.Segment (rotFor i v2 v3 v4 ((v2 + v3 + v4) / 60)) (dataFor i n') (widthFor i) (bgFor i) : segs (i+1) ss
 
-  rotFor i nx ny nz n
+  rotFor _i nx ny nz n
    | nx == 0 && ny == 0 && nz == 0
    = Q.unitU
    | otherwise
@@ -32,6 +39,7 @@ mkTunnel audio
   dataFor i n
    = U.generate dataLength (dataGen n i)
 
+  -- Lots of siney noisey stuff just multiply by the inverse loudness
   dataGen n i j
    = let j' = fromIntegral j :: Double
          dist = sin (sin (sin (i/400) * 3) * 3 + sin (j' / 7) * 2) * (sin (j' / 50) + cos (i / 50) + sin (i * j' / 30)) + 7 * n
@@ -46,10 +54,12 @@ mkTunnel audio
   dataLength = 100
 
 
+-- Analyse the chunk, get audio loudness, rough idea of the fundamental frequency, loudness of low high mid etc bands
+-- TODO there are several loops over the array here that I should tuple together by hand
 analyse :: SV.Vector Int16 -> (Double,Double,Double,Double,Double,Double)
 analyse s
    = let lenI = logBase 2 $ fromIntegral $ SV.length s :: Double
-         len' = 2 ^ truncate lenI
+         len' = 2 ^ (truncate lenI :: Int)
          lenD = fromIntegral len' :: Double
          s'   = SV.unsafeTake len' s
          fft  = FFT.rfft s'

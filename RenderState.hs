@@ -1,7 +1,6 @@
 module RenderState where
+-- Glue the other renderers together
 
-import qualified Data.Vector.Unboxed                as U
-import qualified Data.Vect.Double                   as V
 import qualified Data.Vect.Double.Util.Quaternion   as Q
 import qualified Data.Vect.Double.OpenGL            as VGL
 
@@ -25,8 +24,8 @@ draw s
 
         VGL.multMatrix  $ Q.leftOrthoU rot
 
-
         tun    <- readIORef $ S._sTunnel s
+        -- Draw background colour
         let (r,g,b) = T.bgColour tun
         let col     = GL.Color4 (realToFrac r) (realToFrac g) (realToFrac b) 0.5
 
@@ -38,12 +37,13 @@ draw s
         -- Clear depth buffer, as sky box should be behind everything
         GL.clear [GL.DepthBuffer]
 
+        -- Turn the fog back on only for the tunnel
         GL.fogColor   GL.$= col
         GLR.glEnable GLR.gl_FOG
 
-
         VGL.glTranslate   org
 
+        -- Draw tunnel
         RT.draw tun
 
         GLR.glDisable GLR.gl_FOG

@@ -22,8 +22,8 @@ data State
  , _sSegmentsPerSec :: Double
  }
 
-init :: GLFW.Window -> T.Tunnel -> Int -> IO State
-init win tun segsPerSecond
+initialise :: GLFW.Window -> T.Tunnel -> Int -> IO State
+initialise win tun segsPerSecond
  = do   tun'    <- newIORef   tun
         frames' <- newIORef   0
         time'   <- newIORef   0
@@ -49,7 +49,6 @@ init win tun segsPerSecond
 update :: GLFW.Window -> State -> IO ()
 update win s
  = do   modifyIORef (_sFrames s) (+1)
-        frames <- readIORef $ _sFrames s
 
         oldtime<- readIORef $ _sTime s
         time'  <- GLFW.getTime
@@ -61,36 +60,36 @@ update win s
 
         frametime <- readIORef $ _sFrameTime s
 
+        -- Get mouse cursor position
         oldpos <- readIORef $ _sCursorPos s
         newpos <- GLFW.getCursorPos win
 
         writeIORef (_sCursorPos s) newpos
 
+        -- Update rotation based on mouse
         rot <- readIORef $ _sRot s
-
         let rot' = rotate oldpos newpos rot
-
         writeIORef (_sRot s) rot'
 
         let speed = frametime * _sSegmentsPerSec s * T.tunnelSegmentSize
 
-        -- Check if we can peel a segment off the tunnel
         tun <- readIORef $ _sTunnel s
 
         let motion  = Q.actU rot' (V.Vec3 0 0 speed)
         -- Hack motion - we actually always want to go forward at 'speed', to keep with music
         let motion' = V.mkVec3 (V._1 motion, V._2 motion, speed)
 
+        -- Move forward and check for collision
         org <- readIORef $ _sOrg s
         let org' = org V.&+ motion'
         let org'' = maybe org' id (T.collideSphere tun org' 2)
         writeIORef (_sOrg    s) org''
 
-        -- duh, this is just getting Z
+        -- Duh, this is just getting Z...
         let proj    = org'' V.&. V.Vec3 0 0 1
-        -- putStrLn $ show (org', proj)
 
-        when (proj > T.tunnelSegmentSize * 2) $ do -- (frames `mod` 11 == 0) $ do
+        -- Peel off segments of tunnel as necessary
+        when (proj > T.tunnelSegmentSize * 2) $ do
             let (seg, tun') = T.peel tun
             writeIORef (_sTunnel s) tun'
 

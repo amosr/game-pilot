@@ -35,6 +35,7 @@ Executable game-pilot
 
   GHC-options:
         -Wall
+        -Werror
         -fno-warn-orphans
         -threaded
         -O2

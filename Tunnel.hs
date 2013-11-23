@@ -7,52 +7,54 @@ import qualified Data.Vect.Double.Util.Quaternion as Q
 data Segment
  = Segment
  { _sRot        :: !Q.UnitQuaternion
-   -- Note: all segments in tunnel must have same amount of data
+   -- Note: all segments in tunnel must have same amount/length of data
  , _sVerts      :: !(U.Vector Data)
+ -- | Render width of segment
  , _sWidth      :: !Double
  , _sBgColour   :: !(Double,Double,Double)
  }
 
+-- | Keep it as a tuple so I don't need to write an Unbox instance
+-- Distance from centre and colour
 type Data = (Double, (Double,Double,Double))
-{-
-data Data
- = Data
- { _dist        :: Double
- , _colour      :: (Double,Double,Double)
- }
--}
 
 data Tunnel
  = Tunnel
+ -- | Don't need all the segments at once, so make it a list
  { _tSegments   :: [Segment]
+ -- | Precompute the sines and cosines for all segments
  , _tSines      :: !(U.Vector (Double,Double))
  }
 
+
+-- | Get list of segments with level-of-detail simplifications as they get farther away.
+-- Return segment and distance from previous segment
 lodSegmentsOfTunnel :: Tunnel -> [(Int,Segment)]
 lodSegmentsOfTunnel tun
  = go 0 100 1 200 (_tSegments tun)
  where
-  go n till skip end segs
+  -- Finished
+  go n _ill _kip end _egs
    | n >= end
    = []
 
+  -- If past `till', double the skip rate
   go n till skip end segs
    | n >= till
    = go n (till*2) (skip*2) end segs
 
+  -- Return this segment every modulo skip
   go n till skip end (s:ss)
    = let rest = go (n+1) till skip end ss
      in  if   n `mod` skip == 0
          then (skip, s) : rest
          else             rest
 
-  go _ till skip end []
+  go _ _ill _kip _nd []
    = []
-{-
- = take 200
- $ zip (cycle [1]) (_tSegments tunnel)
- -}
 
+
+-- | Test tunnel with some pretty sine waves
 defaultTunnel :: Tunnel
 defaultTunnel
  = tunnel $ segs (0 :: Double)
@@ -78,6 +80,8 @@ defaultTunnel
 
   dataLength = 100
 
+
+-- | Create tunnel from list of segments
 tunnel :: [Segment] -> Tunnel
 tunnel ss@(s:_)
  = Tunnel
@@ -95,6 +99,7 @@ tunnel ss@(s:_)
 tunnel [] = error "Can't make an empty tunnel!"
 
 
+-- | Just throw away the head segment
 peel :: Tunnel -> (Segment, Tunnel)
 peel tun
  = case _tSegments tun of
@@ -103,6 +108,8 @@ peel tun
             , tun { _tSegments = ss })
 
 
+-- | Find collision between a sphere and tunnel
+-- Returns position of collision point
 collideSphere
     :: Tunnel
     -> V.Vec3   -- ^ position of sphere
@@ -110,10 +117,10 @@ collideSphere
     -> Maybe V.Vec3
 
 -- TODO hacky
-collideSphere tun org rad
- = go org rad V.zero $ _tSegments tun
+collideSphere tun orgI radI
+ = go orgI radI V.zero $ _tSegments tun
  where
-  go org rad fup [] = Nothing
+  go _rg _ad _up [] = Nothing
   go org rad fup (s:ss)
    | V._3 org < 0
    = Nothing
@@ -168,3 +175,4 @@ bgColour tun
  = case _tSegments tun of
     []    -> (0,0,0)
     (s:_) -> _sBgColour s
+
