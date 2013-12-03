@@ -12,6 +12,7 @@ import qualified RenderState        as RS
 import qualified AudioLoad          as ALoad
 import qualified AudioPlay          as APlay
 
+import Control.Applicative
 import Control.Monad ( forever )
 import System.Environment ( getArgs )
 import System.Exit ( exitWith, ExitCode(..) )
@@ -68,15 +69,89 @@ keyPressed :: S.State -> GLFW.KeyCallback
 keyPressed _ win GLFW.Key'Escape _ GLFW.KeyState'Pressed _ = shutdown win
 keyPressed _ _   _               _ _                     _ = return ()
 
+data Args
+ = Args
+ { _aFilename   :: String
+ , _aFullscreen :: Bool
+ , _aMonitor    :: Maybe Int
+ , _aMonitorShow:: Bool
+ }
+argsOfFn :: String -> Args
+argsOfFn fn
+ = Args
+ { _aFilename       = fn
+ , _aFullscreen     = False
+ , _aMonitor        = Nothing
+ , _aMonitorShow    = False
+ }
+
+parseArgs :: [String] -> Maybe Args
+parseArgs []
+ = Nothing
+parseArgs [fn]
+ = Just $ argsOfFn fn
+parseArgs ("-f":xs)
+ | Just a <- parseArgs xs
+ = Just $ a { _aFullscreen = True }
+
+-- Hack: '-m show' doesn't require filename etc because it won't use it
+parseArgs ("-m":"show":_)
+ = Just $ (argsOfFn "") { _aMonitorShow = True }
+
+parseArgs ("-m":num:xs)
+ | Just a <- parseArgs xs
+ = Just $ a { _aMonitor = Just $ read num }
+
+parseArgs _
+ = Nothing
+
+usage :: String
+usage
+ = unlines
+ [ "game-pilot:"
+ , "silly little 'game' that lets you fly through music"
+ , "usage:"
+ , "  game-pilot [-f] [-m (num|show)] filename"
+ , "where"
+ , "-f       : fullscreen"
+ , "-m num   : select monitor number for fullscreen (implies -f)"
+ , "-m show  : show list of available monitors (will not run)"
+ , "filename : flac, ogg, or whatever to view. mp3 is not supported."
+ ]
+
 main :: IO ()
 main = do
      True <- GLFW.init
 
-     let segsPerSecond = 30
-
      args <- getArgs
-     let filename   = last args
-         fullscreen = length args == 2 && head args == "-f"
+     -- TODO print usage
+     case parseArgs args of
+      Nothing
+       -> putStr usage
+      Just (Args { _aMonitorShow = True })
+       -> showMonitorList
+      Just args'
+       -> play args'
+
+showMonitorList :: IO ()
+showMonitorList
+ = do   mons <- GLFW.getMonitors
+        case mons of
+         Nothing
+          ->    putStrLn "No monitors found..."
+         Just ms
+          -> do putStrLn "Monitors:"
+                mapM_ showMon (ms `zip` [0::Int ..])
+ where
+  showMon (m,i)
+   = do name <- GLFW.getMonitorName m
+        putStrLn $ concat [show i, ": ", maybe "<unknown name>" id name]
+
+play :: Args -> IO ()
+play args
+ = do
+     let segsPerSecond = 30
+         filename = _aFilename args
 
      Just music <- ALoad.load filename segsPerSecond
      putStrLn (show $ ALoad._aDuration music)
@@ -87,9 +162,13 @@ main = do
 
      GLFW.defaultWindowHints
      -- get a fullscreen window using the primary monitor
-     monitor  <- if   fullscreen
-                 then GLFW.getPrimaryMonitor
-                 else return Nothing
+     monitor  <- case (_aFullscreen args, _aMonitor args) of
+                  (True, Nothing)
+                   -> GLFW.getPrimaryMonitor
+                  (True, Just i)
+                   -> (fmap (!!i)) <$> GLFW.getMonitors
+                  _
+                   -> return Nothing
      Just win <- GLFW.createWindow 1024 768 "game-pilot" monitor Nothing
 
      let tun = GT.mkTunnel music
