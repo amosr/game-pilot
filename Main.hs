@@ -165,7 +165,7 @@ play args
      monitor  <- case (_aFullscreen args, _aMonitor args) of
                   (True, Nothing)
                    -> GLFW.getPrimaryMonitor
-                  (True, Just i)
+                  (_,    Just i)
                    -> (fmap (!!i)) <$> GLFW.getMonitors
                   _
                    -> return Nothing
