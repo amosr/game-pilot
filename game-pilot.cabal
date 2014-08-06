@@ -7,19 +7,19 @@ Stability:      experimental
 Executable game-pilot
   Build-Depends: 
         base,
-        GLFW-b,
-        vect,
-        vect-opengl,
-        vector,
-        random,
-        OpenGL,
-        OpenGLRaw,
+        GLFW-b              == 1.4.*,
+        vect                == 0.4.*,
+        vect-opengl         == 0.4.*,
+        vector              == 0.10.*,
+        random              == 1.0.*,
+        OpenGL              == 2.9.*,
+        OpenGLRaw           == 1.5.*,
 
-        hsndfile,
-        hsndfile-vector,
-        OpenAL,
+        hsndfile            == 0.7.*,
+        hsndfile-vector     == 0.5.*,
+        OpenAL              == 1.6.*,
 
-        storable-complex
+        storable-complex    == 0.2.*
 
   Main-is: Main.hs
   Other-modules:

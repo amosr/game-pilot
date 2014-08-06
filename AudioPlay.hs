@@ -85,7 +85,7 @@ update state
             (restB,restD)= unzip rest
 
         -- Remove from queue, then fill them with new data and re-add them
-        AL.unqueueBuffers src nowB
+        _ <- AL.unqueueBuffers src processed
         mapM_ fillBuffer now
         AL.queueBuffers src nowB
 
